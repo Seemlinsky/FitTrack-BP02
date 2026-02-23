@@ -1,0 +1,66 @@
+.root {
+    -fx-font-family: "Segoe UI";
+    -fx-background-color: #f4f4f4;
+}
+
+/* ===== TITLES ===== */
+
+.app-title {
+    -fx-font-size: 42px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111111;
+}
+
+.subtitle {
+    -fx-font-size: 18px;
+    -fx-text-fill: #666666;
+}
+
+/* ===== PRIMARY BUTTON ===== */
+
+.btn-primary {
+    -fx-background-color: #000000;
+    -fx-text-fill: white;
+    -fx-background-radius: 10;
+    -fx-padding: 10 25 10 25;
+    -fx-font-weight: bold;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #222222;
+}
+
+/* ===== SECONDARY BUTTON ===== */
+
+.btn-secondary {
+    -fx-background-color: transparent;
+    -fx-border-color: #000000;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 10 25 10 25;
+    -fx-font-weight: bold;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #e8e8e8;
+}
+
+/* ===== DELETE BUTTON ===== */
+
+.btn-danger {
+    -fx-background-color: #d23a2e;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-padding: 8 18;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #b83228;
+}
+
+/* ===== MUTED TEXT ===== */
+
+.muted {
+    -fx-text-fill: #777777;
+}
