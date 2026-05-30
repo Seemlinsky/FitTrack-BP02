@@ -1,42 +1,54 @@
 package nl.adainf.fittrack.model;
 
 /*
- * Workout.java - Model/Entity: 1 object = 1 rij uit de database
+ * Workout.java
  *
- * AD lesstof-stijl:
- * - korte uitleg in simpele woorden
- * - geen SQL hier, dat zit in de DAO
- * - deze klasse gebruikt overerving via FitTrackItem
+ * Dit is een modelklasse voor een workout.
+ *
+ * Een workout hoort bij een gebruiker en een datum.
+ * De workout kan ook een korte notitie hebben.
+ *
+ * Deze klasse erft van FitTrackItem.
+ * Daardoor krijgt Workout de velden id en userId van FitTrackItem.
+ *
+ * Hier staat geen SQL-code.
+ * SQL staat in WorkoutDao.
  */
 
 import java.time.LocalDate;
 
-// Dit is een modelklasse voor een workout.
-// Workout erft id en userId van FitTrackItem.
 public class Workout extends FitTrackItem {
-    // Velden die alleen bij Workout horen
+
+    // De datum waarop de workout is gedaan.
     private LocalDate workoutDate;
+
+    // Korte notitie bij de workout. Dit mag ook leeg zijn.
     private String note;
 
+    // Constructor voor een workout die al een id heeft, bijvoorbeeld uit de database.
     public Workout(int id, int userId, LocalDate workoutDate, String note) {
         super(id, userId);
         this.workoutDate = workoutDate;
         this.note = note;
     }
 
-    // Voor insert: id bestaat nog niet, daarom is id eerst 0
+    // Constructor voor een nieuwe workout.
+    // Het id is dan nog 0, omdat de database het echte id later maakt.
     public Workout(int userId, LocalDate workoutDate, String note) {
         this(0, userId, workoutDate, note);
     }
 
+    // Getter: hiermee haal ik de datum van de workout op.
     public LocalDate getWorkoutDate() {
         return workoutDate;
     }
 
+    // Getter: hiermee haal ik de notitie van de workout op.
     public String getNote() {
         return note;
     }
 
+    // Setter: hiermee kan ik de notitie aanpassen.
     public void setNote(String note) {
         this.note = note;
     }
