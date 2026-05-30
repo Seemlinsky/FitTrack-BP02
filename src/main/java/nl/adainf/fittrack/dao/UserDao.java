@@ -3,64 +3,80 @@ package nl.adainf.fittrack.dao;
 /*
  * UserDao.java
  *
- * Deze DAO praat met de database voor users.
- * We kunnen users ophalen, toevoegen en verwijderen.
+ * Deze klasse regelt het databasewerk voor gebruikers.
  *
- * AD-lesstof-stijl:
- * - simpele uitleg
- * - vooral bij DB/CRUD: verbinden, query uitvoeren, ResultSet lezen
+ * In dit bestand staat SQL-code voor users.
+ * Het StartScreen gebruikt deze DAO om gebruikers op te halen,
+ * toe te voegen en te verwijderen.
+ *
+ * Hierdoor staat de SQL niet direct in het scherm.
  */
 
 import nl.adainf.fittrack.database.Database;
 import nl.adainf.fittrack.model.User;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-// DAO = Data Access Object.
 public class UserDao {
 
-    // R = Read: haal alle users op.
+    // Deze methode haalt alle gebruikers op uit de database.
     public List<User> getAll() {
         List<User> list = new ArrayList<>();
 
-        // We hebben hier geen parameters, maar PreparedStatement is nog steeds prima.
-        // ORDER BY id DESC = nieuwste user bovenaan.
+        // SELECT haalt id en name op uit de users tabel.
+        // ORDER BY id DESC zorgt dat de nieuwste gebruiker bovenaan staat.
         String sql = "SELECT id, name FROM users ORDER BY id DESC";
 
+        // PreparedStatement voert de SQL-query uit.
+        // ResultSet bevat de rijen die uit de database terugkomen.
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             PreparedStatement statement = conn.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
 
-            while (rs.next()) {
-                User u = new User(
-                        rs.getInt("id"),
-                        rs.getString("name")
+            // Met resultSet.next() loop ik rij voor rij door de resultaten.
+            while (resultSet.next()) {
+                User user = new User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name")
                 );
-                list.add(u);
+
+                list.add(user);
             }
 
         } catch (SQLException e) {
+            // Als de databasequery fout gaat, print ik de foutmelding.
             e.printStackTrace();
         }
 
         return list;
     }
 
-    // C = Create: maak een nieuwe user aan.
-    // Return: nieuw id (of -1 als het mislukt).
+    // Deze methode voegt een nieuwe gebruiker toe aan de database.
+    // Als het lukt, geef ik het nieuwe id terug.
+    // Als het niet lukt, geef ik -1 terug.
     public int insert(String name) {
+        // INSERT voegt een nieuwe rij toe aan de users tabel.
+        // Het vraagteken wordt later gevuld met de naam.
         String sql = "INSERT INTO users(name) VALUES(?)";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setString(1, name);
-            ps.executeUpdate();
+            // Hier vul ik het vraagteken in de SQL-query met de gebruikersnaam.
+            statement.setString(1, name);
 
-            // Het id dat MySQL heeft gemaakt (AUTO_INCREMENT)
-            try (ResultSet keys = ps.getGeneratedKeys()) {
+            // executeUpdate gebruik ik bij INSERT, UPDATE en DELETE.
+            statement.executeUpdate();
+
+            // MySQL maakt zelf een id aan met AUTO_INCREMENT.
+            // Met getGeneratedKeys haal ik dat nieuwe id op.
+            try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
                     return keys.getInt(1);
                 }
@@ -73,15 +89,20 @@ public class UserDao {
         return -1;
     }
 
-    // D = Delete: verwijder een user op id.
+    // Deze methode verwijdert een gebruiker uit de database.
     public boolean delete(int id) {
+        // DELETE verwijdert de gebruiker met het gekozen id.
         String sql = "DELETE FROM users WHERE id = ?";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, id);
-            return ps.executeUpdate() == 1;
+            // Hier vul ik het vraagteken met het id van de gebruiker.
+            statement.setInt(1, id);
+
+            // executeUpdate geeft terug hoeveel rijen aangepast/verwijderd zijn.
+            // Als dit 1 is, is het verwijderen gelukt.
+            return statement.executeUpdate() == 1;
 
         } catch (SQLException e) {
             e.printStackTrace();

@@ -1,202 +1,217 @@
 package nl.adainf.fittrack.dao;
 
-
-
 /*
- * MealEntryDao.java - DAO: praat met de database voor meal entries (eten)
+ * MealEntryDao.java
  *
- * AD lesstof-stijl:
- * - korte uitleg in simpele woorden
- * - vooral uitleg bij DB/CRUD (verbinden, query uitvoeren, ResultSet lezen)
- * - geen moeilijke termen zonder uitleg
+ * Deze klasse regelt het databasewerk voor maaltijden.
+ *
+ * In dit bestand staat SQL-code voor meal_entry.
+ * Het scherm zelf hoeft daardoor geen SQL te kennen.
+ *
+ * Hier worden maaltijden toegevoegd, aangepast, verwijderd en opgehaald.
  */
 
 import nl.adainf.fittrack.database.Database;
 import nl.adainf.fittrack.model.MealEntry;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-// DAO = Data Access Object.
-// Hier doen we alle SQL (CRUD) en zetten we DB-rijen om naar model-objecten.
 public class MealEntryDao {
 
-    public int insert(MealEntry m) {
-        // SQL die we naar MySQL sturen (met ? zodat we values veilig kunnen invullen)
-
+    // Deze methode voegt een nieuwe maaltijd toe aan de database.
+    // Als het lukt, geef ik het nieuwe id terug.
+    // Als het niet lukt, geef ik -1 terug.
+    public int insert(MealEntry meal) {
+        // INSERT voegt een nieuwe rij toe aan de meal_entry tabel.
         String sql = "INSERT INTO meal_entry(user_id, meal_date, meal_time, meal_type, meal_name, calories) " +
                 "VALUES(?, ?, ?, ?, ?, ?)";
-        // try-with-resources: Java sluit conn/ps/rs automatisch (scheelt fouten/lekken)
+
         try (Connection conn = Database.getConnection();
-             // PreparedStatement: werkt met ? placeholders (makkelijker en netter dan strings aan elkaar plakken)
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setInt(1, m.getUserId());
-            ps.setDate(2, Date.valueOf(m.getMealDate()));
-            ps.setTime(3, Time.valueOf(m.getMealTime()));
-            ps.setString(4, m.getMealType());
-            ps.setString(5, m.getMealName());
-            ps.setInt(6, m.getCalories());
-            // executeUpdate = INSERT/UPDATE/DELETE uitvoeren
+            // Hier vul ik de vraagtekens in de SQL-query.
+            statement.setInt(1, meal.getUserId());
+            statement.setDate(2, Date.valueOf(meal.getMealDate()));
+            statement.setTime(3, Time.valueOf(meal.getMealTime()));
+            statement.setString(4, meal.getMealType());
+            statement.setString(5, meal.getMealName());
+            statement.setInt(6, meal.getCalories());
 
-            ps.executeUpdate();
+            // executeUpdate gebruik ik bij INSERT, UPDATE en DELETE.
+            statement.executeUpdate();
 
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) return rs.getInt(1);
+            // MySQL maakt zelf een id aan. Die haal ik hier op.
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
             }
+
         } catch (SQLException e) {
-            // Bij fouten printen we de melding (voor school is dit genoeg).
             e.printStackTrace();
         }
+
         return -1;
     }
 
-    public boolean update(MealEntry m) {
-        // SQL die we naar MySQL sturen (met ? zodat we values veilig kunnen invullen)
-
+    // Deze methode past een bestaande maaltijd aan.
+    public boolean update(MealEntry meal) {
+        // UPDATE past de gegevens van een bestaande maaltijd aan.
         String sql = "UPDATE meal_entry SET meal_date=?, meal_time=?, meal_type=?, meal_name=?, calories=? " +
                 "WHERE id=? AND user_id=?";
-        // try-with-resources: Java sluit conn/ps/rs automatisch (scheelt fouten/lekken)
-        try (Connection conn = Database.getConnection();
-             // PreparedStatement: werkt met ? placeholders (makkelijker en netter dan strings aan elkaar plakken)
-             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setDate(1, Date.valueOf(m.getMealDate()));
-            ps.setTime(2, Time.valueOf(m.getMealTime()));
-            ps.setString(3, m.getMealType());
-            ps.setString(4, m.getMealName());
-            ps.setInt(5, m.getCalories());
-            ps.setInt(6, m.getId());
-            ps.setInt(7, m.getUserId());
-            return ps.executeUpdate() == 1;
+        try (Connection conn = Database.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+
+            statement.setDate(1, Date.valueOf(meal.getMealDate()));
+            statement.setTime(2, Time.valueOf(meal.getMealTime()));
+            statement.setString(3, meal.getMealType());
+            statement.setString(4, meal.getMealName());
+            statement.setInt(5, meal.getCalories());
+            statement.setInt(6, meal.getId());
+            statement.setInt(7, meal.getUserId());
+
+            // Als er 1 rij is aangepast, is de update gelukt.
+            return statement.executeUpdate() == 1;
 
         } catch (SQLException e) {
-            // Bij fouten printen we de melding (voor school is dit genoeg).
             e.printStackTrace();
         }
+
         return false;
     }
 
+    // Deze methode verwijdert een maaltijd uit de database.
     public boolean delete(int id, int userId) {
-        // SQL die we naar MySQL sturen (met ? zodat we values veilig kunnen invullen)
-
+        // DELETE verwijdert de maaltijd met het gekozen id.
+        // user_id staat erbij als extra check.
         String sql = "DELETE FROM meal_entry WHERE id=? AND user_id=?";
-        // try-with-resources: Java sluit conn/ps/rs automatisch (scheelt fouten/lekken)
-        try (Connection conn = Database.getConnection();
-             // PreparedStatement: werkt met ? placeholders (makkelijker en netter dan strings aan elkaar plakken)
-             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, id);
-            ps.setInt(2, userId);
-            return ps.executeUpdate() == 1;
+        try (Connection conn = Database.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+
+            statement.setInt(1, id);
+            statement.setInt(2, userId);
+
+            return statement.executeUpdate() == 1;
 
         } catch (SQLException e) {
-            // Bij fouten printen we de melding (voor school is dit genoeg).
             e.printStackTrace();
         }
+
         return false;
     }
 
-    // WHERE + ORDER BY
+    // Deze methode haalt alle maaltijden op van één gebruiker op één datum.
     public List<MealEntry> getByUserAndDate(int userId, LocalDate date) {
         List<MealEntry> list = new ArrayList<>();
-        // SQL die we naar MySQL sturen (met ? zodat we values veilig kunnen invullen)
 
+        // SELECT haalt de maaltijden op.
+        // WHERE filtert op gebruiker en datum.
+        // ORDER BY zet de maaltijden op tijdvolgorde.
         String sql = "SELECT * FROM meal_entry WHERE user_id=? AND meal_date=? ORDER BY meal_time ASC";
-        // try-with-resources: Java sluit conn/ps/rs automatisch (scheelt fouten/lekken)
+
         try (Connection conn = Database.getConnection();
-             // PreparedStatement: werkt met ? placeholders (makkelijker en netter dan strings aan elkaar plakken)
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(date));
+            statement.setInt(1, userId);
+            statement.setDate(2, Date.valueOf(date));
 
-            // executeQuery = SELECT uitvoeren (ResultSet = de tabel met resultaten)
-
-
-            try (ResultSet rs = ps.executeQuery()) {
-                // rs.next() = ga naar de volgende rij in het resultaat
-                while (rs.next()) {
-                    list.add(map(rs));
+            // executeQuery gebruik ik bij SELECT.
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    list.add(map(resultSet));
                 }
             }
+
         } catch (SQLException e) {
-            // Bij fouten printen we de melding (voor school is dit genoeg).
             e.printStackTrace();
         }
+
         return list;
     }
 
-    // GROUP BY + ORDER BY (query clause requirement)
+    // Deze methode telt calorieën per maaltijdtype op.
+    // Bijvoorbeeld hoeveel calorieën bij Lunch of Dinner horen.
     public List<String> getCaloriesPerMealType(int userId, LocalDate date) {
-        List<String> out = new ArrayList<>();
-        // SQL die we naar MySQL sturen (met ? zodat we values veilig kunnen invullen)
+        List<String> result = new ArrayList<>();
 
+        // GROUP BY groepeert de maaltijden per type.
+        // SUM telt de calorieën per groep op.
+        // LIMIT 5 zorgt dat er maximaal 5 resultaten terugkomen.
         String sql = "SELECT meal_type, SUM(calories) AS total_cal " +
                 "FROM meal_entry WHERE user_id=? AND meal_date=? " +
                 "GROUP BY meal_type " +
                 "ORDER BY total_cal DESC " +
                 "LIMIT 5";
-        // try-with-resources: Java sluit conn/ps/rs automatisch (scheelt fouten/lekken)
+
         try (Connection conn = Database.getConnection();
-             // PreparedStatement: werkt met ? placeholders (makkelijker en netter dan strings aan elkaar plakken)
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(date));
+            statement.setInt(1, userId);
+            statement.setDate(2, Date.valueOf(date));
 
-            // executeQuery = SELECT uitvoeren (ResultSet = de tabel met resultaten)
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    String line = resultSet.getString("meal_type") + ": " +
+                            resultSet.getInt("total_cal") + " kcal";
 
-
-            try (ResultSet rs = ps.executeQuery()) {
-                // rs.next() = ga naar de volgende rij in het resultaat
-                while (rs.next()) {
-                    out.add(rs.getString("meal_type") + ": " + rs.getInt("total_cal") + " kcal");
+                    result.add(line);
                 }
             }
+
         } catch (SQLException e) {
-            // Bij fouten printen we de melding (voor school is dit genoeg).
             e.printStackTrace();
         }
-        return out;
+
+        return result;
     }
 
+    // Deze methode telt alle gegeten calorieën op voor één dag.
     public int getTotalCaloriesForDay(int userId, LocalDate date) {
-        // SQL die we naar MySQL sturen (met ? zodat we values veilig kunnen invullen)
+        // SUM telt alle calorieën op.
+        // COALESCE zorgt dat ik 0 terugkrijg als er nog geen maaltijden zijn.
+        String sql = "SELECT COALESCE(SUM(calories), 0) AS total_cal " +
+                "FROM meal_entry WHERE user_id=? AND meal_date=?";
 
-        String sql = "SELECT COALESCE(SUM(calories), 0) AS total_cal FROM meal_entry WHERE user_id=? AND meal_date=?";
-        // try-with-resources: Java sluit conn/ps/rs automatisch (scheelt fouten/lekken)
         try (Connection conn = Database.getConnection();
-             // PreparedStatement: werkt met ? placeholders (makkelijker en netter dan strings aan elkaar plakken)
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(date));
+            statement.setInt(1, userId);
+            statement.setDate(2, Date.valueOf(date));
 
-            // executeQuery = SELECT uitvoeren (ResultSet = de tabel met resultaten)
-
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt("total_cal");
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("total_cal");
+                }
             }
+
         } catch (SQLException e) {
-            // Bij fouten printen we de melding (voor school is dit genoeg).
             e.printStackTrace();
         }
+
         return 0;
     }
 
-    private MealEntry map(ResultSet rs) throws SQLException {
+    // Deze hulpmethode maakt van één database-rij een MealEntry object.
+    private MealEntry map(ResultSet resultSet) throws SQLException {
         return new MealEntry(
-                rs.getInt("id"),
-                rs.getInt("user_id"),
-                rs.getDate("meal_date").toLocalDate(),
-                rs.getTime("meal_time").toLocalTime(),
-                rs.getString("meal_type"),
-                rs.getString("meal_name"),
-                rs.getInt("calories")
+                resultSet.getInt("id"),
+                resultSet.getInt("user_id"),
+                resultSet.getDate("meal_date").toLocalDate(),
+                resultSet.getTime("meal_time").toLocalTime(),
+                resultSet.getString("meal_type"),
+                resultSet.getString("meal_name"),
+                resultSet.getInt("calories")
         );
     }
 }

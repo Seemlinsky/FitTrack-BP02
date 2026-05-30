@@ -3,44 +3,57 @@ package nl.adainf.fittrack.dao;
 /*
  * WorkoutEntryDao.java
  *
- * Deze DAO praat met de database voor workout entries (de details in een workout).
- * Voorbeeld: per workout heb je meerdere entries (activiteit + minuten + calories).
+ * Deze klasse regelt het databasewerk voor workout entries.
  *
- * AD-lesstof-stijl:
- * - simpele uitleg
- * - uitleg bij DB/CRUD: query uitvoeren + ResultSet lezen
+ * Een workout entry is één activiteit binnen een workout.
+ * Bijvoorbeeld:
+ * - activiteit: hardlopen
+ * - minuten: 30
+ * - calorieën: 250
+ *
+ * In dit bestand staat SQL-code voor workout_entry.
+ * Het scherm zelf hoeft daardoor geen SQL te kennen.
  */
 
 import nl.adainf.fittrack.database.Database;
 import nl.adainf.fittrack.model.WorkoutEntry;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-// DAO = Data Access Object.
-// In deze class staat alle SQL voor de tabel workout_entry.
 public class WorkoutEntryDao {
 
-    // C = Create: nieuwe workout entry toevoegen.
-    // Return: nieuw id (of -1 als het mislukt).
-    public int insert(WorkoutEntry e) {
+    // Deze methode voegt een nieuwe workout entry toe aan de database.
+    // Als het lukt, geef ik het nieuwe id terug.
+    // Als het niet lukt, geef ik -1 terug.
+    public int insert(WorkoutEntry entry) {
+        // INSERT voegt een nieuwe rij toe aan de workout_entry tabel.
         String sql = "INSERT INTO workout_entry (workout_id, activity_type_id, minutes, calories) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setInt(1, e.getWorkoutId());
-            ps.setInt(2, e.getActivityTypeId());
-            ps.setInt(3, e.getMinutes());
-            ps.setInt(4, e.getCalories());
+            // Hier vul ik de vraagtekens in de SQL-query.
+            statement.setInt(1, entry.getWorkoutId());
+            statement.setInt(2, entry.getActivityTypeId());
+            statement.setInt(3, entry.getMinutes());
+            statement.setInt(4, entry.getCalories());
 
-            ps.executeUpdate();
+            // executeUpdate gebruik ik bij INSERT, UPDATE en DELETE.
+            statement.executeUpdate();
 
-            // Het id dat MySQL heeft gemaakt (AUTO_INCREMENT)
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) return rs.getInt(1);
+            // MySQL maakt zelf een id aan. Die haal ik hier op.
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
             }
 
         } catch (SQLException ex) {
@@ -50,19 +63,21 @@ public class WorkoutEntryDao {
         return -1;
     }
 
-    // U = Update: bestaande entry aanpassen.
-    public boolean update(WorkoutEntry e) {
+    // Deze methode past een bestaande workout entry aan.
+    public boolean update(WorkoutEntry entry) {
+        // UPDATE past activiteit, minuten en calorieën aan.
         String sql = "UPDATE workout_entry SET activity_type_id = ?, minutes = ?, calories = ? WHERE id = ?";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, e.getActivityTypeId());
-            ps.setInt(2, e.getMinutes());
-            ps.setInt(3, e.getCalories());
-            ps.setInt(4, e.getId());
+            statement.setInt(1, entry.getActivityTypeId());
+            statement.setInt(2, entry.getMinutes());
+            statement.setInt(3, entry.getCalories());
+            statement.setInt(4, entry.getId());
 
-            return ps.executeUpdate() == 1;
+            // Als er 1 rij aangepast is, is de update gelukt.
+            return statement.executeUpdate() == 1;
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -71,21 +86,19 @@ public class WorkoutEntryDao {
         return false;
     }
 
-    /*
-     * D = Delete: verwijder 1 entry.
-     * We geven ook workoutId mee als extra check:
-     * zo verwijderen we niet per ongeluk een entry die bij een andere workout hoort.
-     */
+    // Deze methode verwijdert één workout entry.
     public boolean delete(int id, int workoutId) {
+        // DELETE verwijdert de entry met het gekozen id.
+        // workout_id staat erbij als extra check, zodat ik niet per ongeluk iets verkeerds verwijder.
         String sql = "DELETE FROM workout_entry WHERE id = ? AND workout_id = ?";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, id);
-            ps.setInt(2, workoutId);
+            statement.setInt(1, id);
+            statement.setInt(2, workoutId);
 
-            return ps.executeUpdate() == 1;
+            return statement.executeUpdate() == 1;
 
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -94,13 +107,12 @@ public class WorkoutEntryDao {
         return false;
     }
 
-    /*
-     * R = Read: alle workout entries voor een user op een bepaalde dag.
-     * We gebruiken JOIN zodat we ook de naam van de activity_type kunnen tonen.
-     */
+    // Deze methode haalt alle trainingen op van één gebruiker op één dag.
     public List<WorkoutEntry> getEntriesForDay(int userId, LocalDate date) {
         List<WorkoutEntry> list = new ArrayList<>();
 
+        // SELECT haalt trainingregels op.
+        // JOIN gebruik ik om ook de naam van de activiteit uit activity_type op te halen.
         String sql = "SELECT we.id, we.workout_id, we.activity_type_id, we.minutes, we.calories, at.name AS activity_name " +
                 "FROM workout_entry we " +
                 "JOIN workout w ON w.id = we.workout_id " +
@@ -109,22 +121,24 @@ public class WorkoutEntryDao {
                 "ORDER BY we.id DESC";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(date));
+            statement.setInt(1, userId);
+            statement.setDate(2, Date.valueOf(date));
 
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    WorkoutEntry e = new WorkoutEntry(
-                            rs.getInt("id"),
-                            rs.getInt("workout_id"),
-                            rs.getInt("activity_type_id"),
-                            rs.getString("activity_name"),
-                            rs.getInt("minutes"),
-                            rs.getInt("calories")
+            // executeQuery gebruik ik bij SELECT.
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    WorkoutEntry entry = new WorkoutEntry(
+                            resultSet.getInt("id"),
+                            resultSet.getInt("workout_id"),
+                            resultSet.getInt("activity_type_id"),
+                            resultSet.getString("activity_name"),
+                            resultSet.getInt("minutes"),
+                            resultSet.getInt("calories")
                     );
-                    list.add(e);
+
+                    list.add(entry);
                 }
             }
 
@@ -135,21 +149,25 @@ public class WorkoutEntryDao {
         return list;
     }
 
-    // Extra query: totaal calorieën van alle entries op een dag (JOIN + WHERE + SUM).
+    // Deze methode telt alle verbrande calorieën op voor één dag.
     public int getTotalCaloriesForDay(int userId, LocalDate date) {
+        // SUM telt calorieën bij elkaar op.
+        // COALESCE zorgt dat ik 0 terugkrijg als er nog geen trainingen zijn.
         String sql = "SELECT COALESCE(SUM(we.calories), 0) AS total " +
                 "FROM workout_entry we " +
                 "JOIN workout w ON w.id = we.workout_id " +
                 "WHERE w.user_id = ? AND w.workout_date = ?";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(date));
+            statement.setInt(1, userId);
+            statement.setDate(2, Date.valueOf(date));
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt("total");
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("total");
+                }
             }
 
         } catch (SQLException ex) {
@@ -159,21 +177,25 @@ public class WorkoutEntryDao {
         return 0;
     }
 
-    // Extra query: totaal minuten van alle entries op een dag (JOIN + WHERE + SUM).
+    // Deze methode telt alle actieve minuten op voor één dag.
     public int getTotalMinutesForDay(int userId, LocalDate date) {
+        // SUM telt minuten bij elkaar op.
+        // COALESCE zorgt dat ik 0 terugkrijg als er nog geen trainingen zijn.
         String sql = "SELECT COALESCE(SUM(we.minutes), 0) AS total " +
                 "FROM workout_entry we " +
                 "JOIN workout w ON w.id = we.workout_id " +
                 "WHERE w.user_id = ? AND w.workout_date = ?";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement statement = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, userId);
-            ps.setDate(2, Date.valueOf(date));
+            statement.setInt(1, userId);
+            statement.setDate(2, Date.valueOf(date));
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return rs.getInt("total");
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("total");
+                }
             }
 
         } catch (SQLException ex) {
