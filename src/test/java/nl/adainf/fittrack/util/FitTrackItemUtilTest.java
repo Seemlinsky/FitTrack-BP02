@@ -9,6 +9,16 @@ import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/*
+ * FitTrackItemUtilTest.java
+ *
+ * In dit bestand test ik de FitTrackItemUtil class.
+ *
+ * Deze tests horen bij polymorfie en instanceof.
+ * Workout en MealEntry erven allebei van FitTrackItem.
+ * Met deze tests controleer ik of getItemType() het juiste type teruggeeft.
+ */
+
 class FitTrackItemUtilTest {
 
     @Test

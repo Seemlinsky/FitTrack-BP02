@@ -4,6 +4,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/*
+ * ValidationTest.java
+ *
+ * In dit bestand test ik de Validation class.
+ *
+ * Met deze unit tests controleer ik kleine stukjes code apart.
+ * Zo weet ik of isBlank() en parsePositiveInt() goed werken.
+ */
+
 class ValidationTest {
 
     @Test
