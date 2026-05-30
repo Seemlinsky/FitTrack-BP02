@@ -1,6 +1,11 @@
 /*
- * module-info.java - module settings voor JavaFX / dependencies
- * Studenten-comment versie (simpel uitgelegd).
+ * module-info.java
+ *
+ * Hier staat welke Java modules mijn project gebruikt.
+ *
+ * javafx.controls is nodig voor JavaFX onderdelen zoals Button, Label en TextField.
+ * javafx.fxml staat erbij voor JavaFX ondersteuning.
+ * java.sql is nodig voor de databaseverbinding met MySQL.
  */
 
 module nl.adainf.fittrack {

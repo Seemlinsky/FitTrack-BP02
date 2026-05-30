@@ -1,14 +1,18 @@
 package nl.adainf.fittrack;
 
-
-
 /*
- * MainApp.java - JavaFX Application: maakt de stage + schakelt tussen schermen
+ * MainApp.java
  *
- * AD lesstof-stijl:
- * - korte uitleg in simpele woorden
- * - vooral uitleg bij DB/CRUD (verbinden, query uitvoeren, ResultSet lezen)
- * - geen moeilijke termen zonder uitleg
+ * Dit is de hoofdklasse van de JavaFX applicatie.
+ *
+ * Hier wordt het hoofdvenster gemaakt met Stage.
+ * Daarna wissel ik tussen de verschillende schermen:
+ * - StartScreen
+ * - WorkoutScreen
+ * - OverviewScreen
+ *
+ * Deze class doet zelf geen databasewerk.
+ * De databasecode staat in de DAO-klassen.
  */
 
 import javafx.application.Application;
@@ -22,52 +26,62 @@ import java.util.Objects;
 
 public class MainApp extends Application {
 
+    // Stage is het hoofdvenster van de JavaFX app.
     private Stage stage;
+
+    // Hier bewaar ik de gekozen gebruiker.
     private int userId;
 
+    // start() wordt automatisch door JavaFX aangeroepen bij het starten van de app.
     @Override
-    // start() wordt door JavaFX aangeroepen.
-// Hier zetten we de titel, scene, en wat er gebeurt bij navigatie.
     public void start(Stage stage) {
         this.stage = stage;
+
         stage.setTitle("FitTrack");
         showStart();
         stage.show();
     }
 
+    // Deze methode voegt de CSS-stijl toe aan een scherm.
     private void applyStyles(Scene scene) {
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm()
         );
     }
 
+    // Dit laat het beginscherm zien.
     private void showStart() {
-        StartScreen s = new StartScreen(id -> {
+        StartScreen startScreen = new StartScreen(id -> {
             this.userId = id;
             showWorkout();
         });
 
-        Scene scene = s.getScene();
+        Scene scene = startScreen.getScene();
         applyStyles(scene);
-        // Scene wisselen = ander scherm laten zien
+
+        // Scene wisselen betekent dat ik een ander scherm laat zien.
         stage.setScene(scene);
     }
 
+    // Dit laat het workoutscherm zien.
     private void showWorkout() {
-        WorkoutScreen w = new WorkoutScreen(userId, this::showOverview);
+        WorkoutScreen workoutScreen = new WorkoutScreen(userId, this::showOverview);
 
-        Scene scene = w.getScene();
+        Scene scene = workoutScreen.getScene();
         applyStyles(scene);
-        // Scene wisselen = ander scherm laten zien
+
+        // Hier vervang ik het huidige scherm door het workoutscherm.
         stage.setScene(scene);
     }
 
+    // Dit laat het overzichtsscherm zien.
     private void showOverview() {
-        OverviewScreen o = new OverviewScreen(userId, this::showWorkout, this::showStart);
+        OverviewScreen overviewScreen = new OverviewScreen(userId, this::showWorkout, this::showStart);
 
-        Scene scene = o.getScene();
+        Scene scene = overviewScreen.getScene();
         applyStyles(scene);
-        // Scene wisselen = ander scherm laten zien
+
+        // Hier vervang ik het huidige scherm door het overzichtsscherm.
         stage.setScene(scene);
     }
 }
