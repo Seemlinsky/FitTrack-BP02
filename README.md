@@ -69,7 +69,7 @@ In de schermen gebruik ik JavaFX-controls zoals:
 * `Button` voor acties
 * `ComboBox` voor keuzes
 * `DatePicker` voor datumkeuze
-* `TableView` of lijsten voor overzicht van data
+* `ListView` voor overzicht van data
 
 ### Layoutmanagers
 
@@ -78,7 +78,6 @@ Voor de opmaak van de schermen gebruik ik layoutmanagers zoals:
 * `VBox`
 * `HBox`
 * `GridPane`
-* `BorderPane`
 
 Deze zorgen ervoor dat de onderdelen netjes op het scherm staan.
 
