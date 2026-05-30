@@ -237,25 +237,37 @@ USAGE.md
 ```text
 src/main/java
 └── nl/adainf/fittrack
+    ├── Launcher.java
     ├── MainApp.java
     ├── database
     │   └── Database.java
     ├── dao
+    │   ├── ActivityTypeDao.java
     │   ├── UserDao.java
     │   ├── WorkoutDao.java
+    │   ├── WorkoutEntryDao.java
     │   └── MealEntryDao.java
     ├── model
+    │   ├── ActivityType.java
+    │   ├── FitTrackItem.java
     │   ├── User.java
     │   ├── Workout.java
     │   ├── WorkoutEntry.java
-    │   ├── MealEntry.java
-    │   └── ActivityType.java
+    │   └── MealEntry.java
     ├── screens
     │   ├── StartScreen.java
     │   ├── WorkoutScreen.java
-    │   └── OverviewScreen.java
+    │   ├── OverviewScreen.java
+    │   ├── TrainingDialogs.java
+    │   └── MealDialogs.java
     └── util
-        └── Validator.java
+        ├── Validation.java
+        └── FitTrackItemUtil.java
+
+src/test/java
+└── nl/adainf/fittrack/util
+    ├── ValidationTest.java
+    └── FitTrackItemUtilTest.java
 ```
 
 ---
