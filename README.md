@@ -108,14 +108,26 @@ Met getters kan de applicatie gegevens uit deze objecten ophalen.
 
 ### Overerving
 
-In het project wordt overerving gebruikt om algemene eigenschappen op één plek te bewaren.
-Een algemene klasse kan bijvoorbeeld gedeelde eigenschappen bevatten, zoals een id of userId.
-Specifieke klassen zoals een workout of maaltijd kunnen hiervan erven.
+In het project gebruik ik overerving met de klasse `FitTrackItem`.
+
+`FitTrackItem` is de algemene klasse. Hierin staan gedeelde velden zoals `id` en `userId`.
+
+De klassen `Workout` en `MealEntry` erven van `FitTrackItem`. Hierdoor hoef ik `id` en `userId` niet dubbel in beide klassen te zetten.
+
+Dit sluit aan op de lesstof over superklassen en subklassen.
 
 ### Polymorfie en instanceof
 
-Polymorfie wordt gebruikt wanneer meerdere soorten objecten via een algemene klasse of type verwerkt kunnen worden.
-Met `instanceof` kan gecontroleerd worden welk specifiek objecttype gebruikt wordt.
+Omdat `Workout` en `MealEntry` allebei erven van `FitTrackItem`, kan ik ze behandelen als een algemeen `FitTrackItem` object.
+
+In `FitTrackItemUtil` gebruik ik `instanceof` om te controleren welk specifiek type object het is.
+
+Bijvoorbeeld:
+
+- als het object een `Workout` is, geeft de methode `"Workout"` terug
+- als het object een `MealEntry` is, geeft de methode `"MealEntry"` terug
+
+Dit sluit aan op de lesstof over polymorfie en `instanceof`.
 
 ### Dataconversie
 
