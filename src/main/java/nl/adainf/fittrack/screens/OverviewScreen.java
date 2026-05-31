@@ -13,7 +13,7 @@ package nl.adainf.fittrack.screens;
  * - maaltijden bekijken, toevoegen, aanpassen en verwijderen
  * - trainingen bekijken, toevoegen, aanpassen en verwijderen
  *
- * Dit past bij de reader omdat ik hier JavaFX controls gebruik:
+ * In dit scherm gebruik ik JavaFX controls zoals:
  * - Label voor tekst en totalen
  * - DatePicker om een datum te kiezen
  * - Button voor acties

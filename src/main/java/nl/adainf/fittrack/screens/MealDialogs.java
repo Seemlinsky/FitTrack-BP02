@@ -9,7 +9,7 @@ package nl.adainf.fittrack.screens;
  * - maaltijd toevoegen
  * - maaltijd aanpassen
  *
- * Dit past bij de reader omdat ik hier JavaFX controls gebruik:
+ * In deze dialog gebruik ik JavaFX controls zoals:
  * - Dialog voor een pop-up scherm
  * - DatePicker om een datum te kiezen
  * - TextField om tijd, naam en calorieën in te vullen

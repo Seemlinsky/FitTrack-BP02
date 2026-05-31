@@ -14,7 +14,7 @@ package nl.adainf.fittrack.screens;
  * - de workout opslaan
  * - naar het overzicht gaan
  *
- * Dit past bij de reader omdat ik hier JavaFX controls gebruik:
+ * In dit scherm gebruik ik JavaFX controls zoals:
  * - Label voor tekst
  * - DatePicker voor een datum
  * - TextField voor invoer

@@ -9,7 +9,7 @@ package nl.adainf.fittrack.screens;
  * - training toevoegen
  * - training aanpassen
  *
- * Dit past bij de reader omdat ik hier JavaFX controls gebruik:
+ * In deze dialog gebruik ik JavaFX controls zoals:
  * - Dialog voor een pop-up scherm
  * - ComboBox om een activiteit te kiezen
  * - TextField om minuten en calorieën in te vullen
